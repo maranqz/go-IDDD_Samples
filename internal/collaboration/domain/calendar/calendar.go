@@ -1,9 +1,11 @@
-package domain
+package calendar
 
 import (
 	"errors"
 	"fmt"
 
+	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/collaborator"
+	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
 	"github.com/maranqz/go-IDDD_Samples/internal/common/domain"
 )
 
@@ -15,19 +17,19 @@ var (
 	ErrCalendarDescEmpty  = fmt.Errorf("%w: description: empty", ErrCalendar)
 )
 
-type invitees map[*Participant]struct{}
+type invitees map[*collaborator.Participant]struct{}
 
 // Bad idea, CalendarID loses methods, see https://go.dev/ref/spec#Type_definitions
 // type CalendarID domain.UUID
 
-type CalendarID struct {
+type ID struct {
 	domain.UUID
 }
 
-func NewCalendarID[In domain.Strings](in In) (CalendarID, error) {
+func NewCalendarID[In domain.Strings](in In) (ID, error) {
 	u, err := domain.NewUUID(in)
 
-	return CalendarID{UUID: u}, err
+	return ID{UUID: u}, err
 }
 
 type Name string
@@ -50,17 +52,17 @@ func NewName[In string](in In) (Name, error) {
 }
 
 type Calendar struct {
-	calendarId  CalendarID
+	calendarId  ID
 	description string
 	name        Name
-	owner       *Owner
+	owner       *collaborator.Owner
 	sharedWith  map[CalendarSharer]struct{}
-	tenant      TenantID
+	tenant      tenant.ID
 }
 
 func NewCalendar(
-	aTenant TenantID,
-	aCalendarId CalendarID,
+	aTenant tenant.ID,
+	aCalendarId ID,
 	aName Name,
 	aDescription string,
 ) (*Calendar, error) {
@@ -82,7 +84,7 @@ func (c *Calendar) AllSharedWith() map[CalendarSharer]struct{} {
 	return c.sharedWith
 }
 
-func (c *Calendar) CalendarId() CalendarID {
+func (c *Calendar) CalendarId() ID {
 	return c.calendarId
 }
 
@@ -109,7 +111,7 @@ func (c *Calendar) Name() Name {
 	return c.name
 }
 
-func (c *Calendar) Owner() *Owner {
+func (c *Calendar) Owner() *collaborator.Owner {
 	return c.owner
 }
 
@@ -130,7 +132,7 @@ func (c *Calendar) SharedWith() []CalendarSharer {
 	return sharedWith
 }
 
-func (c *Calendar) TenantID() TenantID {
+func (c *Calendar) TenantID() tenant.ID {
 	return c.tenant
 }
 
@@ -138,7 +140,7 @@ func (c *Calendar) ScheduleCalendarEntry(
 	aCalendarIdentityService CalendarIdentityService,
 	aDescription string,
 	aLocation string,
-	anOwner *Owner,
+	anOwner *collaborator.Owner,
 	aTimeSpan TimeSpan,
 	aRepetition Repetition,
 	anAlarm Alarm,

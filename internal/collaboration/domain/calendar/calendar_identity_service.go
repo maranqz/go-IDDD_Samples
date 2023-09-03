@@ -1,4 +1,4 @@
-package domain
+package calendar
 
 type CalendarIdentityService struct {
 	calendarRepository      CalendarRepository
@@ -15,10 +15,10 @@ func NewCalendarIdentityService(
 	}, nil
 }
 
-func (c *CalendarIdentityService) NextCalendarEntryId() CalendarEntryID {
+func (c *CalendarIdentityService) NextCalendarEntryId() EntryID {
 	return c.calendarEntryRepository.NextIdentity()
 }
 
-func (c *CalendarIdentityService) NextCalendarId() CalendarID {
+func (c *CalendarIdentityService) NextCalendarId() ID {
 	return c.calendarRepository.NextIdentity()
 }

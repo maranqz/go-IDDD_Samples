@@ -1,10 +1,12 @@
-package domain
+package calendar
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/collaborator"
+	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
 	"github.com/maranqz/go-IDDD_Samples/internal/common/domain"
 )
 
@@ -15,38 +17,38 @@ var (
 	ErrCalendarEntryParticipantEmpty = fmt.Errorf("%w: participant: empty", ErrCalendarEntry)
 )
 
-type CalendarEntryID struct {
+type EntryID struct {
 	domain.UUID
 }
 
-func NewCalendarEntryID[In domain.Strings](in In) (CalendarID, error) {
+func NewCalendarEntryID[In domain.Strings](in In) (ID, error) {
 	u, err := domain.NewUUID(in)
 
-	return CalendarID{UUID: u}, err
+	return ID{UUID: u}, err
 }
 
-type Invitees = map[*Participant]struct{}
+type Invitees = map[*collaborator.Participant]struct{}
 
 type CalendarEntry struct {
 	alarm           Alarm
-	calendarEntryId CalendarEntryID
-	calendarID      CalendarID
+	calendarEntryId EntryID
+	calendarID      ID
 	description     string
 	invitees        Invitees
 	location        string
-	owner           *Owner
+	owner           *collaborator.Owner
 	repetition      Repetition
-	tenant          TenantID
+	tenant          tenant.ID
 	timeSpan        TimeSpan
 }
 
 func NewCalendarEntry(
-	aTenant TenantID,
-	aCalendarId CalendarID,
-	aCalendarEntryId CalendarEntryID,
+	aTenant tenant.ID,
+	aCalendarId ID,
+	aCalendarEntryId EntryID,
 	aDescription string,
 	aLocation string,
-	anOwner *Owner,
+	anOwner *collaborator.Owner,
 	aTimeSpan TimeSpan,
 	aRepetition Repetition,
 	anAlarm Alarm,
@@ -123,11 +125,11 @@ func (c *CalendarEntry) AllInvitees() Invitees {
 	return c.invitees
 }
 
-func (c *CalendarEntry) CalendarEntryID() CalendarEntryID {
+func (c *CalendarEntry) CalendarEntryID() EntryID {
 	return c.calendarEntryId
 }
 
-func (c *CalendarEntry) CalendarID() CalendarID {
+func (c *CalendarEntry) CalendarID() ID {
 	return c.calendarID
 }
 
@@ -145,7 +147,7 @@ func (c *CalendarEntry) Description() string {
 	return c.description
 }
 
-func (c *CalendarEntry) assertInvitee(aParticipant *Participant) error {
+func (c *CalendarEntry) assertInvitee(aParticipant *collaborator.Participant) error {
 	if aParticipant.IsEmpty() {
 		return ErrCalendarEntryParticipantEmpty
 	}
@@ -153,7 +155,7 @@ func (c *CalendarEntry) assertInvitee(aParticipant *Participant) error {
 	return nil
 }
 
-func (c *CalendarEntry) Invite(aParticipant *Participant) error {
+func (c *CalendarEntry) Invite(aParticipant *collaborator.Participant) error {
 	if err := c.assertInvitee(aParticipant); err != nil {
 		return err
 	}
@@ -166,7 +168,7 @@ func (c *CalendarEntry) Invite(aParticipant *Participant) error {
 }
 
 // TODO add error wrapping
-func (c *CalendarEntry) Uninvite(aParticipant *Participant) error {
+func (c *CalendarEntry) Uninvite(aParticipant *collaborator.Participant) error {
 	if err := c.assertInvitee(aParticipant); err != nil {
 		return err
 	}
@@ -182,7 +184,7 @@ func (c *CalendarEntry) Location() string {
 	return c.location
 }
 
-func (c *CalendarEntry) Owner() *Owner {
+func (c *CalendarEntry) Owner() *collaborator.Owner {
 	return c.owner
 }
 
@@ -238,7 +240,7 @@ func (c *CalendarEntry) Reschedule(aDescription string, aLocation string, aTimeS
 	return nil
 }
 
-func (c *CalendarEntry) Tenant() TenantID {
+func (c *CalendarEntry) Tenant() tenant.ID {
 	return c.tenant
 }
 

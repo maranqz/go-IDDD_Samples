@@ -1,7 +1,8 @@
-package domain
+package tenant
 
 import "github.com/maranqz/go-IDDD_Samples/internal/common/domain"
 
-type TenantID struct {
+// TODO add factory
+type ID struct {
 	domain.UUID
 }

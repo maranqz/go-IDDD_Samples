@@ -1,4 +1,4 @@
-package domain
+package calendar
 
 type AlarmUnitsType int
 

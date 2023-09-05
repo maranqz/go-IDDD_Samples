@@ -22,7 +22,7 @@ func (u *UUID) IsEmpty() bool {
 	return u == nil || u.UUID == emptyUUID
 }
 
-// @TODO при инкапсуляции, можно потом убрать ниже лежащий тип и не публиковать нижележащий API
+// TODO при инкапсуляции, можно потом убрать ниже лежащий тип и не публиковать нижележащий API
 var mpErrStringIDToUUID = map[error]error{
 	ErrStringID:      ErrUUID,
 	ErrStringIDEmpty: ErrUUIDEmpty,

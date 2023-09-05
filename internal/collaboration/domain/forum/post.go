@@ -65,7 +65,6 @@ func NewPostReply(
 	aSubject string,
 	aBodyText string,
 ) (*Post, error) {
-
 	if err := assertAuthor(anAuthor, ErrPost); err != nil {
 		return nil, err
 	}

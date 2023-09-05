@@ -122,11 +122,19 @@ func (c *CalendarEntry) Alarm() Alarm {
 	return c.alarm
 }
 
-// TODO linter to block changes, golang doesn't have immutable map
-// or use https://github.com/benbjohnson/immutable
-// https://github.com/golang/go/issues/27975
+// AllInvitees returns copy of Invitees.
+// Other solutions to get around the lack of immutable types:
+// * linter to block changes, golang doesn't have immutable map
+// * use lib https://github.com/benbjohnson/immutable
+// proposal https://github.com/golang/go/issues/27975
 func (c *CalendarEntry) AllInvitees() Invitees {
-	return c.invitees
+	res := make(Invitees, len(c.invitees))
+
+	for k, v := range c.invitees {
+		res[k] = v
+	}
+
+	return res
 }
 
 func (c *CalendarEntry) CalendarEntryID() EntryID {

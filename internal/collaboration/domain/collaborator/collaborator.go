@@ -27,7 +27,7 @@ func newCollaborator(identity domain.UUID, name string, emailAddress string) (co
 }
 
 func (c *collaborator) IsEmpty() bool {
-	// TODO Do it that we can use c.identity.IsEmpty()
+	// Use due to cannot call a pointer method on 'c.Identity()'
 	identity := c.Identity()
 
 	return c == nil || identity.IsEmpty()

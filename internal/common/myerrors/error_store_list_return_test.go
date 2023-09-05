@@ -11,20 +11,20 @@ func ExampleListReturn() {
 
 	var i int
 	i, err := NewInt(true)
-	errs = Filter(errs, err)
+	errs = Append(errs, err)
 	fmt.Printf("int(\"%d\"): with error\n", i)
 
 	i, err = NewInt(false)
-	errs = Filter(errs, err)
+	errs = Append(errs, err)
 	fmt.Printf("int(\"%d\")\n", i)
 
 	var s string
 	s, err = NewString(true)
-	errs = Filter(errs, err)
+	errs = Append(errs, err)
 	fmt.Printf("string(\"%s\"): with error\n", s)
 
 	s, err = NewString(false)
-	errs = Filter(errs, err)
+	errs = Append(errs, err)
 	fmt.Printf("string(\"%s\")\n", s)
 
 	fmt.Println(errs)

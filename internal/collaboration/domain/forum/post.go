@@ -7,6 +7,7 @@ import (
 
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/collaborator"
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
+	"github.com/maranqz/go-IDDD_Samples/internal/common/domain"
 )
 
 var (
@@ -15,6 +16,10 @@ var (
 	ErrPostSubjectEmpty  = fmt.Errorf("%w: subject: empty", ErrDiscussion)
 	ErrPostBodyTextEmpty = fmt.Errorf("%w: description: empty", ErrDiscussion)
 )
+
+type PostID struct {
+	domain.UUID
+}
 
 type Post struct {
 	author        *collaborator.Author

@@ -8,6 +8,7 @@ import (
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/collaborator"
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
 	"github.com/maranqz/go-IDDD_Samples/internal/common/domain"
+	"github.com/maranqz/go-IDDD_Samples/internal/common/myerrors"
 )
 
 var (
@@ -63,6 +64,9 @@ func NewCalendarEntry(
 	}
 
 	aRepetition, err = checkRepetitionDoesNotRepeat(aRepetition, aTimeSpan)
+	if err != nil {
+		return nil, err
+	}
 
 	if err = assertTimeSpans(aRepetition, aTimeSpan); err != nil {
 		return nil, err
@@ -205,31 +209,12 @@ func (c *CalendarEntry) Repetition() Repetition {
 }
 
 func (c *CalendarEntry) Reschedule(aDescription string, aLocation string, aTimeSpan TimeSpan, aRepetition Repetition, anAlarm Alarm) (err error) {
-	aRepetition, err = checkRepetitionDoesNotRepeat(aRepetition, aTimeSpan)
+	aRepetition, errs := myerrors.Check(checkRepetitionDoesNotRepeat(aRepetition, aTimeSpan))(nil)
+	errs = myerrors.Check0(assertTimeSpans(aRepetition, aTimeSpan))(errs)
+	errs = myerrors.Check0(c.ChangeDescription(aDescription))(errs)
+	errs = myerrors.Check0(c.Relocate(aLocation))(errs)
 
-	// TODO Add on application level
-	id, err := domain.NewUUID(inId)
-	if err != nil {
-		return nil, err
-	}
-	id, err := domain.NewUUID(inId)
-	if err != nil {
-		return nil, err
-	}
-	id, err := domain.NewUUID(inId)
-	if err != nil {
-		return nil, err
-	}
-	id, err := domain.NewUUID(inId)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = assertTimeSpans(aRepetition, aTimeSpan); err != nil {
-		return err
-	} else if err = c.ChangeDescription(aDescription); err != nil {
-		return err
-	} else if err = c.Relocate(aLocation); err != nil {
+	if err := myerrors.First(errs); err != nil {
 		return err
 	}
 

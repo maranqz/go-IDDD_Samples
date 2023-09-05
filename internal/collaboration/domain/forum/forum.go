@@ -1,9 +1,26 @@
 package forum
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/collaborator"
 	"github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
 	"github.com/maranqz/go-IDDD_Samples/internal/common/domain"
+)
+
+var (
+	ErrForum                   = errors.New("forum")
+	ErrForumCreatorEmpty       = errors.New("creator: empty")
+	ErrForumClosed             = fmt.Errorf("%w: closed", ErrForum)
+	ErrForumOpened             = fmt.Errorf("%w: opened", ErrForum)
+	ErrForumDescEmpty          = fmt.Errorf("%w: description: empty", ErrForum)
+	ErrForumSubjectEmpty       = fmt.Errorf("%w: subject: empty", ErrForum)
+	ErrForumPost               = fmt.Errorf("%w: post", ErrForum)
+	ErrForumPostEmpty          = fmt.Errorf("%w: empty", ErrForumPost)
+	ErrForumPostForbidden      = fmt.Errorf("%w: invalid forum", ErrForumPost)
+	ErrForumModeratorEmpty     = fmt.Errorf("%w: moderatory: empty", ErrForum)
+	ErrForumModeratorForbidden = fmt.Errorf("%w: moderatory: invalid forum", ErrForum)
 )
 
 type ForumID struct {
@@ -21,42 +38,99 @@ type Forum struct {
 	tenant         tenant.ID
 }
 
-func NewForum(aTenant tenant.ID, aForumId ForumID, aCreator *Creator, aModerator *collaborator.Moderator, aSubject string, aDescription string, anExclusiveOwner string) (rcvr *Forum) {
-	rcvr = NewForum()
-	f.assertArgumentNotNull(aCreator, "The creator must be provided.")
-	f.assertArgumentNotEmpty(aDescription, "The description must be provided.")
-	f.assertArgumentNotNull(aForumId, "The forum id must be provided.")
-	f.assertArgumentNotNull(aModerator, "The moderator must be provided.")
-	f.assertArgumentNotEmpty(aSubject, "The subject must be provided.")
-	f.assertArgumentNotNull(aTenant, "The creator must be provided.")
-	f.apply(NewForumStarted(aTenant, aForumId, aCreator, aModerator, aSubject, aDescription, anExclusiveOwner))
-	return
+func NewForum(
+	aTenant tenant.ID,
+	aForumId ForumID,
+	aCreator *collaborator.Creator,
+	aModerator *collaborator.Moderator,
+	aSubject string,
+	aDescription string,
+	anExclusiveOwner string,
+) (*Forum, error) {
+	if aCreator.IsEmpty() {
+		return nil, ErrForumCreatorEmpty
+	}
+
+	if aDescription == "" {
+		return nil, ErrForumDescEmpty
+	}
+
+	// TODO think to use AssignModerator
+	if aModerator.IsEmpty() {
+		return nil, ErrForumModeratorEmpty
+	}
+
+	if aSubject == "" {
+		return nil, ErrForumSubjectEmpty
+	}
+
+	// TODO this one or fill fields?
+	f := &Forum{}
+	f.setCreator(aCreator)
+	f.setDescription(aDescription)
+	f.setExclusiveOwner(anExclusiveOwner)
+	f.setForumId(aForumId)
+	f.setModerator(aModerator)
+	f.setSubject(aSubject)
+	f.setTenant(aTenant)
+
+	return f, nil
 }
 
-func (f *Forum) AssignModerator(aModerator *collaborator.Moderator) {
-	f.assertStateFalse(f.isClosed(), "Forum is closed.")
-	f.assertArgumentNotNull(aModerator, "The moderator must be provided.")
-	f.apply(NewForumModeratorChanged(f.tenant(), f.forumId(), aModerator, f.exclusiveOwner()))
+func (f *Forum) AssignModerator(aModerator *collaborator.Moderator) error {
+	if err := f.assertClosed(); err != nil {
+		return err
+	}
+
+	// TODO think to move in setModerator
+	if aModerator.IsEmpty() {
+		return ErrForumModeratorEmpty
+	}
+
+	f.setModerator(aModerator)
+
+	return nil
 }
 
-func (f *Forum) ChangeDescription(aDescription string) {
-	f.assertStateFalse(f.isClosed(), "Forum is closed.")
-	f.assertArgumentNotEmpty(aDescription, "The description must be provided.")
-	f.apply(NewForumDescriptionChanged(f.tenant(), f.forumId(), aDescription, f.exclusiveOwner()))
+func (f *Forum) ChangeDescription(aDescription string) error {
+	if err := f.assertClosed(); err != nil {
+		return err
+	}
+
+	if aDescription == "" {
+		return ErrForumDescEmpty
+	}
+
+	f.setDescription(aDescription)
+
+	return nil
 }
 
-func (f *Forum) ChangeSubject(aSubject string) {
-	f.assertStateFalse(f.isClosed(), "Forum is closed.")
-	f.assertArgumentNotEmpty(aSubject, "The subject must be provided.")
-	f.apply(NewForumSubjectChanged(f.tenant(), f.forumId(), aSubject, f.exclusiveOwner()))
+func (f *Forum) ChangeSubject(aSubject string) error {
+	if err := f.assertClosed(); err != nil {
+		return err
+	}
+
+	if aSubject == "" {
+		return ErrForumSubjectEmpty
+	}
+
+	f.setSubject(aSubject)
+
+	return nil
 }
 
-func (f *Forum) Close() {
-	f.assertStateFalse(f.isClosed(), "Forum is already closed.")
-	f.apply(NewForumClosed(f.tenant(), f.forumId(), f.exclusiveOwner()))
+func (f *Forum) Close() error {
+	if err := f.assertClosed(); err != nil {
+		return err
+	}
+
+	f.setClosed(false)
+
+	return nil
 }
 
-func (f *Forum) Creator() *Creator {
+func (f *Forum) Creator() *collaborator.Creator {
 	return f.creator
 }
 
@@ -73,7 +147,7 @@ func (f *Forum) ForumId() ForumID {
 }
 
 func (f *Forum) HasExclusiveOwner() bool {
-	return f.ExclusiveOwner() != nil
+	return f.ExclusiveOwner() != ""
 }
 
 func (f *Forum) IsClosed() bool {
@@ -81,31 +155,68 @@ func (f *Forum) IsClosed() bool {
 }
 
 func (f *Forum) IsModeratedBy(aModerator *collaborator.Moderator) bool {
-	return f.Moderator().equals(aModerator)
+	return !aModerator.IsEmpty() &&
+		f.Moderator().Identity() == aModerator.Identity()
 }
 
-func (f *Forum) ModeratePost(aPost *Post, aModerator *collaborator.Moderator, aSubject string, aBodyText string) {
-	f.assertStateFalse(f.isClosed(), "Forum is closed.")
-	f.assertArgumentNotNull(aPost, "Post may not be null.")
-	f.assertArgumentEquals(aPost.forumId(), f.forumId(), "Not a post of this forum.")
-	f.assertArgumentTrue(f.isModeratedBy(aModerator), "Not the moderator of this forum.")
-	aPost.alterPostContent(aSubject, aBodyText)
+func (f *Forum) ModeratePost(
+	aPost *Post,
+	aModerator *collaborator.Moderator,
+	aSubject string,
+	aBodyText string,
+) error {
+	if err := f.assertClosed(); err != nil {
+		return err
+	}
+
+	if aPost == nil {
+		return ErrForumPostEmpty
+	} else if f.ForumId() != aPost.ForumId() {
+		return ErrForumPostForbidden
+	}
+
+	if f.IsModeratedBy(aModerator) {
+		return ErrForumModeratorForbidden
+	}
+
+	return aPost.alterPostContent(aSubject, aBodyText)
 }
 
 func (f *Forum) Moderator() *collaborator.Moderator {
 	return f.moderator
 }
 
-func (f *Forum) Reopen() {
-	f.assertStateTrue(f.isClosed(), "Forum is not closed.")
-	f.apply(NewForumReopened(f.tenant(), f.forumId(), f.exclusiveOwner()))
+func (f *Forum) Reopen() error {
+	if err := f.assertOpened(); err != nil {
+		return err
+	}
+
+	f.setClosed(false)
+
+	return nil
+}
+
+func (f *Forum) assertClosed() error {
+	if f.IsClosed() {
+		return ErrForumClosed
+	}
+
+	return nil
+}
+
+func (f *Forum) assertOpened() error {
+	if !f.IsClosed() {
+		return ErrForumOpened
+	}
+
+	return nil
 }
 
 func (f *Forum) setClosed(isClosed bool) {
 	f.closed = isClosed
 }
 
-func (f *Forum) setCreator(aCreator *Creator) {
+func (f *Forum) setCreator(aCreator *collaborator.Creator) {
 	f.creator = aCreator
 }
 
@@ -133,16 +244,33 @@ func (f *Forum) setTenant(aTenant tenant.ID) {
 	f.tenant = aTenant
 }
 
-func (f *Forum) StartDiscussion(aForumIdentityService ForumIDentityService, anAuthor *collaborator.Author, aSubject string) *Discussion {
-	return f.startDiscussionFor(aForumIdentityService, anAuthor, aSubject, nil)
+func (f *Forum) StartDiscussion(aForumIdentityService IdentityService, anAuthor *collaborator.Author, aSubject string) (*Discussion, error) {
+	return f.StartDiscussionFor(
+		aForumIdentityService,
+		anAuthor,
+		aSubject,
+		"",
+	)
 }
 
-func (f *Forum) StartDiscussionFor(aForumIdentityService ForumIDentityService, anAuthor *collaborator.Author, aSubject string, anExclusiveOwner string) *Discussion {
-	if f.isClosed() {
-		throw(NewIllegalStateException("Forum is closed."))
+func (f *Forum) StartDiscussionFor(
+	aForumIdentityService IdentityService,
+	anAuthor *collaborator.Author,
+	aSubject string,
+	anExclusiveOwner string,
+) (*Discussion, error) {
+	if err := f.assertClosed(); err != nil {
+		return nil, err
 	}
-	discussion := NewDiscussion(f.tenant(), f.forumId(), aForumIdentityService.nextDiscussionId(), anAuthor, aSubject, anExclusiveOwner)
-	return discussion
+
+	return NewDiscussion(
+		f.Tenant(),
+		f.ForumId(),
+		aForumIdentityService.NextDiscussionId(),
+		anAuthor,
+		aSubject,
+		anExclusiveOwner,
+	)
 }
 
 func (f *Forum) Subject() string {
@@ -151,34 +279,4 @@ func (f *Forum) Subject() string {
 
 func (f *Forum) Tenant() tenant.ID {
 	return f.tenant
-}
-
-func (f *Forum) when(anEvent *ForumClosed) {
-	f.setClosed(true)
-}
-
-func (f *Forum) when2(anEvent *ForumDescriptionChanged) {
-	f.setDescription(anEvent.description())
-}
-
-func (f *Forum) when3(anEvent *ForumModeratorChanged) {
-	f.setModerator(anEvent.moderator())
-}
-
-func (f *Forum) when4(anEvent *ForumReopened) {
-	f.setClosed(false)
-}
-
-func (f *Forum) when5(anEvent *ForumStarted) {
-	f.setCreator(anEvent.creator())
-	f.setDescription(anEvent.description())
-	f.setExclusiveOwner(anEvent.exclusiveOwner())
-	f.setForumId(anEvent.forumId())
-	f.setModerator(anEvent.moderator())
-	f.setSubject(anEvent.subject())
-	f.setTenant(anEvent.tenant())
-}
-
-func (f *Forum) when6(anEvent *ForumSubjectChanged) {
-	f.setSubject(anEvent.subject())
 }

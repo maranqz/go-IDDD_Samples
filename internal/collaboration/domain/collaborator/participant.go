@@ -38,7 +38,11 @@ type Author struct {
 	collaborator
 }
 
-func NewAuthor(identity domain.UUID, name string, emailAddress string) (*collaborator.Author, error) {
+func NewAuthor(
+	identity domain.UUID,
+	name string,
+	emailAddress string,
+) (*Author, error) {
 	c, err := newCollaborator(identity, name, emailAddress)
 	if err != nil {
 		return nil, err

@@ -91,7 +91,7 @@ func (d *Discussion) IsClosed() bool {
 
 // Reply was a Post in Java
 func (d *Discussion) Reply(
-	aForumIdentityService ForumIdentityService,
+	aForumIdentityService IdentityService,
 	aReplyToPost *PostID,
 	anAuthor *collaborator.Author,
 	aSubject string,
@@ -110,7 +110,7 @@ func (d *Discussion) Reply(
 }
 
 func (d *Discussion) Post(
-	aForumIdentityService ForumIdentityService,
+	aForumIdentityService IdentityService,
 	anAuthor *collaborator.Author,
 	aSubject string,
 	aBodyText string,

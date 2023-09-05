@@ -66,7 +66,6 @@ func NewCalendar(
 	aName Name,
 	aDescription string,
 ) (*Calendar, error) {
-
 	if aDescription == "" {
 		return nil, ErrCalendarDescEmpty
 	}

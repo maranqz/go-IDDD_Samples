@@ -1,9 +1,11 @@
 package collaborator
 
+import "github.com/maranqz/go-IDDD_Samples/internal/collaboration/domain/tenant"
+
 type CollaboratorService interface {
-	AuthorFrom(aTenant TenantID, anIdentity string) (*collaborator.Author, error)
-	CreatorFrom(aTenant TenantID, anIdentity string) (*Creator, error)
-	ModeratorFrom(aTenant TenantID, anIdentity string) (*Moderator, error)
-	OwnerFrom(aTenant TenantID, anIdentity string) (*Owner, error)
-	ParticipantFrom(aTenant TenantID, anIdentity string) (*Participant, error)
+	AuthorFrom(aTenant tenant.ID, anIdentity string) (*Author, error)
+	CreatorFrom(aTenant tenant.ID, anIdentity string) (*Creator, error)
+	ModeratorFrom(aTenant tenant.ID, anIdentity string) (*Moderator, error)
+	OwnerFrom(aTenant tenant.ID, anIdentity string) (*Owner, error)
+	ParticipantFrom(aTenant tenant.ID, anIdentity string) (*Participant, error)
 }

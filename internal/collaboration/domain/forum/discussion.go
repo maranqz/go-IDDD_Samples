@@ -30,7 +30,7 @@ type Discussion struct {
 	tenant         tenant.ID
 }
 
-func NewDiscussion(
+func newDiscussion(
 	aTenantID tenant.ID,
 	aForumID ForumID,
 	aDiscussionID DiscussionID,

@@ -41,6 +41,7 @@ type Forum struct {
 func NewForum(
 	aTenant tenant.ID,
 	aForumId ForumID,
+	// TODO Why is it not ID?
 	aCreator *collaborator.Creator,
 	aModerator *collaborator.Moderator,
 	aSubject string,
@@ -51,6 +52,10 @@ func NewForum(
 		return nil, ErrForumCreatorEmpty
 	}
 
+	if aSubject == "" {
+		return nil, ErrForumSubjectEmpty
+	}
+
 	if aDescription == "" {
 		return nil, ErrForumDescEmpty
 	}
@@ -58,10 +63,6 @@ func NewForum(
 	// TODO think to use AssignModerator
 	if aModerator.IsEmpty() {
 		return nil, ErrForumModeratorEmpty
-	}
-
-	if aSubject == "" {
-		return nil, ErrForumSubjectEmpty
 	}
 
 	// TODO this one or fill fields?
@@ -263,7 +264,7 @@ func (f *Forum) StartDiscussionFor(
 		return nil, err
 	}
 
-	return NewDiscussion(
+	return newDiscussion(
 		f.Tenant(),
 		f.ForumId(),
 		aForumIdentityService.NextDiscussionId(),

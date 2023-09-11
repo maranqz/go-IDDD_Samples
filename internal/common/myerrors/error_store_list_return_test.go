@@ -27,12 +27,14 @@ func ExampleListReturn() {
 	errs = Append(errs, err)
 	fmt.Printf("string(\"%s\")\n", s)
 
+	fmt.Println(First(errs))
 	fmt.Println(errs)
 
 	// Output: int("0"): with error
 	// int("1")
 	// string(""): with error
 	// string("string")
+	// `int err`
 	// [`int err` `string err`]
 }
 
@@ -53,11 +55,13 @@ func ExampleListCallback() {
 	s, errs = Check(NewString(false))(errs)
 	fmt.Printf("string(\"%s\")\n", s)
 
+	fmt.Println(First(errs))
 	fmt.Println(errs)
 
 	// Output: int("0"): with error
 	// int("1")
 	// string(""): with error
 	// string("string")
+	// `int err`
 	// [`int err` `string err`]
 }
